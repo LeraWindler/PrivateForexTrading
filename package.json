@@ -1,0 +1,26 @@
+{
+  "name": "private-forex-trading",
+  "version": "1.0.0",
+  "description": "Private Forex Trading Platform with Fully Homomorphic Encryption",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -c-1 --cors",
+    "dev": "npx http-server . -p 3000 -c-1 --cors"
+  },
+  "keywords": [
+    "blockchain",
+    "forex",
+    "trading",
+    "privacy",
+    "FHE",
+    "ethereum",
+    "web3"
+  ],
+  "author": "Anonymous",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
