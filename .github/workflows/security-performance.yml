@@ -1,0 +1,180 @@
+name: Security and Performance CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --production
+        continue-on-error: true
+
+      - name: Run Solidity linter
+        run: npm run lint:sol
+
+      - name: Check for security patterns
+        run: |
+          echo "Checking for security anti-patterns..."
+          ! grep -r "tx.origin" contracts/ || (echo "Found tx.origin usage" && exit 1)
+          ! grep -r "block.timestamp" contracts/ || echo "Warning: block.timestamp usage found"
+          echo "Security pattern check completed"
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript linter
+        run: npm run lint
+
+      - name: Check code formatting
+        run: npm run format:check
+
+      - name: Run TypeScript compiler
+        run: npx tsc --noEmit
+
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        env:
+          REPORT_GAS: false
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  gas-analysis:
+    name: Gas Usage Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run gas reporter
+        run: npm run test:gas
+        env:
+          REPORT_GAS: true
+
+      - name: Upload gas report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gas-report
+          path: gas-report.txt
+          retention-days: 30
+
+  contract-size:
+    name: Contract Size Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Check contract sizes
+        run: npm run size
+
+      - name: Verify contract size limits
+        run: |
+          echo "Checking contract size limits (24KB)..."
+          npx hardhat size-contracts --no-compile
+
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance tests
+        run: npm test
+        env:
+          REPORT_GAS: true
+
+      - name: Analyze results
+        run: |
+          echo "Performance test completed"
+          if [ -f gas-report.txt ]; then
+            echo "Gas usage report:"
+            cat gas-report.txt
+          fi
