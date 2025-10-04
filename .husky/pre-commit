@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo "Running pre-commit hooks..."
+
+# Format check
+echo "Checking code formatting..."
+npm run format:check
+if [ $? -ne 0 ]; then
+  echo "Error: Code formatting check failed. Run 'npm run format' to fix."
+  exit 1
+fi
+
+# TypeScript lint
+echo "Running TypeScript linter..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "Error: TypeScript linting failed. Run 'npm run lint:fix' to fix."
+  exit 1
+fi
+
+# Solidity lint
+echo "Running Solidity linter..."
+npm run lint:sol
+if [ $? -ne 0 ]; then
+  echo "Error: Solidity linting failed. Run 'npm run lint:sol:fix' to fix."
+  exit 1
+fi
+
+# Run tests
+echo "Running tests..."
+npm test
+if [ $? -ne 0 ]; then
+  echo "Error: Tests failed."
+  exit 1
+fi
+
+echo "All pre-commit checks passed!"
+exit 0

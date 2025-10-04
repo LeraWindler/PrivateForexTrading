@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "Running pre-push hooks..."
+
+# Security check
+echo "Running security audit..."
+npm run security:check
+if [ $? -ne 0 ]; then
+  echo "Warning: Security check found issues."
+fi
+
+# Coverage check
+echo "Running test coverage..."
+npm run test:coverage
+if [ $? -ne 0 ]; then
+  echo "Error: Test coverage check failed."
+  exit 1
+fi
+
+echo "All pre-push checks passed!"
+exit 0
