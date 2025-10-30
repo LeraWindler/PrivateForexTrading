@@ -1,0 +1,14 @@
+# Directories
+**/artifacts
+**/node_modules
+**/cache
+**/dist
+**/typechain
+**/typechain-types
+
+# Test files
+**/test/**
+**/scripts/**
+
+# Dependencies
+**/dependencies/**
